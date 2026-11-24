@@ -147,14 +147,14 @@ def main():
     raw_trips = zf.read(names["trips.txt"]).decode("utf-8-sig")
     trip_rows = parse_csv(raw_trips)
     trip_id_map = {}
-    trip_lines = ["route_id,service_id,trip_id,trip_headsign"]
+    trip_lines = ["route_id,service_id,trip_id,trip_headsign,wheelchair_accessible"]
     for r in trip_rows:
         if r.get("service_id") not in services:
             continue
         new_id = "T%d" % (len(trip_id_map) + 1)
         trip_id_map[r["trip_id"]] = new_id
         headsign = (r.get("trip_headsign") or "").replace(",", " ").replace("\n", " ")
-        trip_lines.append(",".join([r.get("route_id", ""), r["service_id"], new_id, headsign]))
+        trip_lines.append(",".join([r.get("route_id", ""), r["service_id"], new_id, headsign, (r.get("wheelchair_accessible") or "").strip()]))
     texts["trips.txt"] = "\n".join(trip_lines) + "\n"
     print("Trips kept: %d of %d" % (len(trip_id_map), len(trip_rows)))
 
@@ -187,6 +187,7 @@ def main():
     with zipfile.ZipFile(pack_path, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as out:
         for name in KEEP_FILES:
             out.writestr(name, texts[name])
+          out.writestr("tripmap.json", json.dumps(trip_id_map))
     pack_bytes = os.path.getsize(pack_path)
 
     meta = {
