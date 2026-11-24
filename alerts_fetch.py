@@ -67,3 +67,23 @@ try:
         geo = ev.get('geography') or {}
         coords = geo.get('coordinates') if geo.get('type') == 'Point' else None
         events.append({
+            'headline': ev.get('headline') or '',
+            'type': ev.get('event_type') or '',
+            'severity': ev.get('severity') or '',
+            'roads': roads,
+            'area': areas[0].get('name') if areas else '',
+            'lat': coords[1] if coords else None,
+            'lon': coords[0] if coords else None,
+            'updated': ev.get('updated') or '',
+        })
+except Exception as ex:
+    print('traffic events failed:', ex)
+
+out = {
+    'generated_at': datetime.now(timezone.utc).isoformat(),
+    'alerts': alerts[:300],
+    'events': events[:200],
+}
+with open('alerts.json', 'w') as f:
+    json.dump(out, f)
+print('alerts:', len(out['alerts']), 'events:', len(out['events']))
