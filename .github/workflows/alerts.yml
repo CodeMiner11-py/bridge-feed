@@ -1,0 +1,33 @@
+name: alerts
+
+on:
+  schedule:
+    - cron: '12 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  alerts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch alerts
+        env:
+          API_511_KEY: ${{ secrets.API_511_KEY }}
+        run: python3 alerts_fetch.py
+      - name: Publish alerts.json to the alerts branch
+        run: |
+          mkdir -p /tmp/pub
+          cp alerts.json /tmp/pub/alerts.json
+          cd /tmp/pub
+          git init -q
+          git config user.email "actions@github.com"
+          git config user.name "github-actions"
+          git add alerts.json
+          git commit -qm "alerts update"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" HEAD:alerts
