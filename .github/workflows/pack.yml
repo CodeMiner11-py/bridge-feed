@@ -1,5 +1,7 @@
 name: Daily BRIDGE feed pack
 
+# Runs once a day at 08:10 UTC (just after midnight Pacific) and whenever
+# someone clicks "Run workflow" on the Actions tab.
 on:
   schedule:
     - cron: '10 8 * * *'
@@ -29,3 +31,19 @@ jobs:
         run: |
           gh release delete latest --yes --cleanup-tag || true
           gh release create latest out/bridge-feed.zip out/feed-meta.json --title "Latest packed feed" --notes "Packed automatically once a day from 511's Regional GTFS feed."
+
+      # The app downloads the pack from this branch via raw.githubusercontent
+      # (release downloads cannot be fetched by a web page - no CORS headers).
+      # The branch is force-pushed as a single commit every day, so the repo
+      # never grows.
+      - name: Publish the pack branch (what the app downloads)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd out
+          git init -b pack
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add bridge-feed.zip feed-meta.json
+          git commit -m "Daily packed feed"
+          git push --force "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" pack
