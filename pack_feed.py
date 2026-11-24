@@ -187,7 +187,7 @@ def main():
     with zipfile.ZipFile(pack_path, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as out:
         for name in KEEP_FILES:
             out.writestr(name, texts[name])
-          out.writestr("tripmap.json", json.dumps(trip_id_map))
+        out.writestr("tripmap.json", json.dumps(trip_id_map))
     pack_bytes = os.path.getsize(pack_path)
 
     meta = {
